@@ -17,7 +17,9 @@ public class FloorCheck : MonoBehaviour
             isOnFloor = false;
         }
 
-        (isEnter, isStay, isExit) = (false, false, false);
+        isEnter = false;
+        isStay = false;
+        isExit = false;
         return this.isOnFloor;
     }
     private void OnTriggerEnter2D(Collider2D other)
