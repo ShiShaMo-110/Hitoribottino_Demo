@@ -6,7 +6,7 @@ public class PlayerMove : MonoBehaviour
 {
     static float speedInFloatArea = 0.3f;
     [SerializeField] FloorCheck floorCheck;
-    Camera mainCamera = Camera.main;
+    Camera mainCamera;
 
     #region プレイヤー変数
     enum playerState {
@@ -19,9 +19,14 @@ public class PlayerMove : MonoBehaviour
     };
     playerState currentPlayerState;
     playerState previousPlayerState;
+    public enum playerDirection
+    {
+        DIRECTION_RIGHT,
+        DIRECTION_LEFT
+    };
+    public playerDirection playerDir;
     Rigidbody2D playerRigidbody2D;
     float playerWalkSpeed = 10.0f;
-    float playerRunSpeed = 20.0f;
     float playerJumpSpeed = 10.0f;
     #endregion
     #region 無重力空間変数
@@ -36,6 +41,7 @@ public class PlayerMove : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        mainCamera = Camera.main;
         playerRigidbody2D = this.GetComponent<Rigidbody2D>();
         floatAreas = new GameObject[floatAreasLength + 1];
     }
@@ -64,9 +70,15 @@ public class PlayerMove : MonoBehaviour
         if(Input.GetKey(KeyCode.A))
         {
             velocityX = -playerWalkSpeed;
-        } else if(Input.GetKey(KeyCode.D)) {
+            playerDir = playerDirection.DIRECTION_LEFT;
+        }
+        else if(Input.GetKey(KeyCode.D))
+        {
             velocityX = playerWalkSpeed;
-        } else {
+            playerDir = playerDirection.DIRECTION_RIGHT;
+        }
+        else
+        {
             velocityX = 0f;
         }
         return velocityX;
@@ -101,7 +113,8 @@ public class PlayerMove : MonoBehaviour
         }
         if(Input.GetMouseButton(1))
         {
-            cursorPosition = mainCamera.ViewportToWorldPoint(Input.mousePosition);
+            cursorPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            cursorPosition = new Vector3(cursorPosition.x, cursorPosition.y, 0);
             newFloatAreaTransform.position = cursorPosition;
         }
         if(Input.GetMouseButtonUp(1))
