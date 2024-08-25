@@ -6,7 +6,10 @@ public class PlayerMove : MonoBehaviour
 {
     static float speedInFloatArea = 0.3f;
     [SerializeField] FloorCheck floorCheck;
+    [SerializeField] FloatAreaCheck floatAreaCheck;
     Camera mainCamera;
+    bool isOnFloorTemp;
+    bool isInFloatAreaTemp;
 
     #region プレイヤー変数
     enum playerState {
@@ -26,14 +29,17 @@ public class PlayerMove : MonoBehaviour
     };
     public playerDirection playerDir;
     Rigidbody2D playerRigidbody2D;
-    float playerWalkSpeed = 10.0f;
+    float playerSpeed;
+    float playerWalkSpeed = 5.0f;
     float playerJumpSpeed = 10.0f;
     #endregion
     #region 無重力空間変数
     [SerializeField] GameObject floatAreaPrefab;
+    int floatAreasize = 2;
     GameObject[] floatAreas;
     int floatAreasLength = 0;
     Vector3 cursorPosition;
+    Vector3 cuttedCursorPositionTemp;
     Transform newFloatAreaTransform;
     Vector3 newFloatAreaPosition;
     #endregion
@@ -56,6 +62,13 @@ public class PlayerMove : MonoBehaviour
     #region プレイヤー移動
     void MovePlayer()
     {
+//        isInFloatAreaTemp = floatAreaCheck.getisInFloatArea();
+        if(isInFloatAreaTemp)
+        {
+            playerSpeed = speedInFloatArea;
+        } else {
+            playerSpeed = 1.0f;
+        }
         playerRigidbody2D.velocity = new Vector2(MoveX(), MoveY());
         if(currentPlayerState == playerState.STATE_JUMP && floorCheck.getisOnFloor())
         {
@@ -69,12 +82,12 @@ public class PlayerMove : MonoBehaviour
         float velocityX;
         if(Input.GetKey(KeyCode.A))
         {
-            velocityX = -playerWalkSpeed;
+            velocityX = -playerWalkSpeed * playerSpeed;
             playerDir = playerDirection.DIRECTION_LEFT;
         }
         else if(Input.GetKey(KeyCode.D))
         {
-            velocityX = playerWalkSpeed;
+            velocityX = playerWalkSpeed * playerSpeed;
             playerDir = playerDirection.DIRECTION_RIGHT;
         }
         else
@@ -88,8 +101,8 @@ public class PlayerMove : MonoBehaviour
     float MoveY()
     {
         float velocityY = playerRigidbody2D.velocity.y;
-        Debug.Log(floorCheck.getisOnFloor());
-        if(Input.GetKeyDown(KeyCode.W) && floorCheck.getisOnFloor())
+        isOnFloorTemp = floorCheck.getisOnFloor();
+        if(Input.GetKeyDown(KeyCode.W) && isOnFloorTemp)
         {
             previousPlayerState = currentPlayerState;
             currentPlayerState = playerState.STATE_JUMP;
@@ -113,8 +126,7 @@ public class PlayerMove : MonoBehaviour
         }
         if(Input.GetMouseButton(1))
         {
-            cursorPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            cursorPosition = new Vector3(cursorPosition.x, cursorPosition.y, 0);
+            cursorPosition = CuttingCursorPosition(mainCamera.ScreenToWorldPoint(Input.mousePosition));
             newFloatAreaTransform.position = cursorPosition;
         }
         if(Input.GetMouseButtonUp(1))
@@ -132,6 +144,11 @@ public class PlayerMove : MonoBehaviour
             floatAreas[i] = floatAreas[i + 1];
         }
         floatAreas[floatAreasLength] = Instantiate(floatAreaPrefab, cursorPosition, Quaternion.identity);
+    }
+    Vector3 CuttingCursorPosition(Vector3 cursorPosition)
+    {
+        cuttedCursorPositionTemp = new Vector3((int)cursorPosition.x, (int)cursorPosition.y, 0);
+        return cuttedCursorPositionTemp;
     }
     #endregion
 
