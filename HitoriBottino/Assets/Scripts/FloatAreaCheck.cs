@@ -8,6 +8,7 @@ public class FloatAreaCheck : MonoBehaviour
     private Transform thisTransform;
     private SpriteRenderer thisSpriteRenderer;
     private bool isEnter, isStay, isExit;
+    public static float speedInFloatArea = 0.5f;
     private void Start() 
     {
         thisTransform = this.transform;

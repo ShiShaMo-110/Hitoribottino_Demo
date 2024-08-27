@@ -44,7 +44,6 @@ public class PlayerMove : MonoBehaviour
     Transform newFloatAreaTransform;
     Vector3 playerVelocityInFloatArea;
     Vector3 playerVelocityInFloatAreaTemp;
-    static float speedInFloatArea = 0.5f;
     #endregion
     
     // Start is called before the first frame update
@@ -161,9 +160,9 @@ public class PlayerMove : MonoBehaviour
             isCanJump = true;
             if(floatAreaCheck_head.getisInFloatArea())
             {
-                playerVelocityInFloatArea = playerVelocityInFloatAreaTemp * speedInFloatArea;
+                playerVelocityInFloatArea = playerVelocityInFloatAreaTemp * FloatAreaCheck.speedInFloatArea;
             } else {
-                playerVelocityInFloatArea = playerVelocityInFloatAreaTemp * speedInFloatArea;
+                playerVelocityInFloatArea = playerVelocityInFloatAreaTemp * FloatAreaCheck.speedInFloatArea;
             }
         }
         if(floatAreaCheck_body.getisInFloatArea())
@@ -181,5 +180,13 @@ public class PlayerMove : MonoBehaviour
     {
         previousPlayerState = currentPlayerState;
         currentPlayerState = newPlayerState;
+    }
+
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        if(other.gameObject.tag == "Enemy")
+        {
+            Debug.Log("Game Over");
+        }
     }
 }
