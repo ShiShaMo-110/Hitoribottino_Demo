@@ -5,8 +5,14 @@ using UnityEngine;
 public class FloatAreaCheck : MonoBehaviour
 {
     private bool isInFloatArea;
+    private Transform thisTransform;
+    private SpriteRenderer thisSpriteRenderer;
     private bool isEnter, isStay, isExit;
-
+    private void Start() 
+    {
+        thisTransform = this.transform;
+        thisSpriteRenderer = this.GetComponent<SpriteRenderer>();
+    }
     public bool getisInFloatArea()
     {
         if(isEnter || isStay)
@@ -20,6 +26,14 @@ public class FloatAreaCheck : MonoBehaviour
         isStay = false;
         isExit = false;
         return this.isInFloatArea;
+    }
+    public bool getisEnter()
+    {
+        return isEnter;
+    }
+    public bool getisExit()
+    {
+        return isExit;
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
