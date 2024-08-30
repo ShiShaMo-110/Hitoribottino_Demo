@@ -12,7 +12,8 @@ public class PlayerMove : MonoBehaviour
     bool isInFloatAreaTemp;
 
     #region プレイヤー変数
-    enum playerState {
+    enum playerState
+    {
         STATE_WALK,
         STATE_RUN,
         STATE_PUTFroatArea,
@@ -33,19 +34,22 @@ public class PlayerMove : MonoBehaviour
     float playerWalkSpeed = 5.0f;
     float playerJumpSpeed = 10.0f;
     bool isCanJump;
+    Vector3 playerVelocityTemp;
     #endregion
     #region 無重力空間変数
     [SerializeField] GameObject floatAreaPrefab;
-    int floatAreasize = 2;
+    int floatAreasize = 3;
     GameObject[] floatAreas;
-    int floatAreasLength = 0;
+    int floatAreasLength = 2;
+    int floatAreaCoolTime = 0;
     Vector3 cursorPosition;
     Vector3 cuttedCursorPositionTemp;
     Transform newFloatAreaTransform;
     Vector3 playerVelocityInFloatArea;
     Vector3 playerVelocityInFloatAreaTemp;
+    bool isPuttingFloatArea;
     #endregion
-    
+
     // Start is called before the first frame update
     void Start()
     {
@@ -60,13 +64,14 @@ public class PlayerMove : MonoBehaviour
         MovePlayer();
         PutFloatArea();
         InFloatArea();
+        playerRigidbody2D.velocity = playerVelocityTemp;
     }
 
     #region プレイヤー移動
     void MovePlayer()
     {
-        playerRigidbody2D.velocity = new Vector2(MoveX(), MoveY());
-        if(currentPlayerState == playerState.STATE_JUMP && floorCheck.getisOnFloor())
+        playerVelocityTemp = new Vector2(MoveX(), MoveY());
+        if (currentPlayerState == playerState.STATE_JUMP && floorCheck.getisOnFloor())
         {
             ChangePlayerState(playerState.STATE_WALK);
         }
@@ -76,12 +81,12 @@ public class PlayerMove : MonoBehaviour
     float MoveX()
     {
         float velocityX;
-        if(Input.GetKey(KeyCode.A))
+        if (Input.GetKey(KeyCode.A))
         {
             velocityX = -playerWalkSpeed;
             playerDir = playerDirection.DIRECTION_LEFT;
         }
-        else if(Input.GetKey(KeyCode.D))
+        else if (Input.GetKey(KeyCode.D))
         {
             velocityX = playerWalkSpeed;
             playerDir = playerDirection.DIRECTION_RIGHT;
@@ -98,7 +103,7 @@ public class PlayerMove : MonoBehaviour
     {
         float velocityY = playerRigidbody2D.velocity.y;
         isOnFloorTemp = floorCheck.getisOnFloor();
-        if(Input.GetKeyDown(KeyCode.W))
+        if (Input.GetKeyDown(KeyCode.W))
         {
             if (isCanJump || isOnFloorTemp)
             {
@@ -117,29 +122,36 @@ public class PlayerMove : MonoBehaviour
 
     void PutFloatArea()
     {
-        if(Input.GetMouseButtonDown(1))
+        floatAreaCoolTime++;
+        if (floatAreaCoolTime > 500)
         {
-            Time.timeScale = 0f;
-            currentPlayerState = playerState.STATE_PUTFroatArea;
-            InstantiateFloatArea();
-            newFloatAreaTransform = floatAreas[floatAreasLength].transform;
-        }
-        if(Input.GetMouseButton(1))
-        {
-            cursorPosition = CuttingCursorPosition(mainCamera.ScreenToWorldPoint(Input.mousePosition));
-            newFloatAreaTransform.position = cursorPosition;
-        }
-        if(Input.GetMouseButtonUp(1))
-        {
-            Time.timeScale = 1.0f;
-            currentPlayerState = previousPlayerState;
+            if (Input.GetMouseButtonDown(1))
+            {
+                Time.timeScale = 0f;
+                currentPlayerState = playerState.STATE_PUTFroatArea;
+                InstantiateFloatArea();
+                newFloatAreaTransform = floatAreas[floatAreasLength].transform;
+                isPuttingFloatArea = true;
+            }
+            if (isPuttingFloatArea)
+            {
+                cursorPosition = CuttingCursorPosition(mainCamera.ScreenToWorldPoint(Input.mousePosition));
+                newFloatAreaTransform.position = cursorPosition;
+            }
+            if (Input.GetMouseButtonUp(1))
+            {
+                Time.timeScale = 1.0f;
+                currentPlayerState = previousPlayerState;
+                floatAreaCoolTime = 0;
+                isPuttingFloatArea = false;
+            }
         }
     }
 
     void InstantiateFloatArea()
     {
         Destroy(floatAreas[0]);
-        for(int i = 0; i < floatAreasLength; i ++)
+        for (int i = 0; i < floatAreasLength; i++)
         {
             floatAreas[i] = floatAreas[i + 1];
         }
@@ -148,31 +160,43 @@ public class PlayerMove : MonoBehaviour
     Vector3 CuttingCursorPosition(Vector3 cursorPosition)
     {
         cuttedCursorPositionTemp = new Vector3(cursorPosition.x, cursorPosition.y, 0);
+        cuttedCursorPositionTemp = cuttedCursorPositionTemp + new Vector3(-(cuttedCursorPositionTemp.x % floatAreasize) + floatAreasize/2f, -(cuttedCursorPositionTemp.y % floatAreasize) + floatAreasize/2f, 0);
         return cuttedCursorPositionTemp;
     }
     #endregion
     #region 無重力空間内
     void InFloatArea()
     {
-        if(floatAreaCheck_body.getisEnter())
+        if (floatAreaCheck_body.getisEnter())
         {
             playerVelocityInFloatAreaTemp = playerRigidbody2D.velocity;
             isCanJump = true;
-            if(floatAreaCheck_head.getisInFloatArea())
+            if (floatAreaCheck_head.getisInFloatArea())
             {
                 playerVelocityInFloatArea = playerVelocityInFloatAreaTemp * FloatAreaCheck.speedInFloatArea;
-            } else {
+            }
+            else
+            {
+                //仮
                 playerVelocityInFloatArea = playerVelocityInFloatAreaTemp * FloatAreaCheck.speedInFloatArea;
             }
         }
-        if(floatAreaCheck_body.getisInFloatArea())
+        if (floatAreaCheck_body.getisInFloatArea())
         {
-            playerRigidbody2D.velocity = playerVelocityInFloatArea;
+            if(playerRigidbody2D.velocity.x == 0)
+            {
+                playerVelocityInFloatArea = new Vector3(-playerVelocityInFloatArea.x, playerVelocityInFloatArea.y, 0);
+            }
+            if(playerRigidbody2D.velocity.y == 0)
+            {
+                playerVelocityInFloatArea = new Vector3(playerVelocityInFloatArea.x, -playerVelocityInFloatArea.y, 0);
+            }
+            playerVelocityTemp = playerVelocityInFloatArea;
         }
-        if(floatAreaCheck_body.getisExit())
+        if (floatAreaCheck_body.getisExit())
         {
             Debug.Log("Exit");
-            playerRigidbody2D.velocity = playerVelocityInFloatAreaTemp;
+            playerVelocityTemp = playerVelocityInFloatAreaTemp;
         }
     }
     #endregion
@@ -184,7 +208,7 @@ public class PlayerMove : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D other)
     {
-        if(other.gameObject.tag == "Enemy")
+        if (other.gameObject.tag == "Enemy")
         {
             Debug.Log("Game Over");
         }
