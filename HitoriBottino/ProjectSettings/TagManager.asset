@@ -8,6 +8,7 @@ TagManager:
   - FloatArea
   - Checker
   - Enemy
+  - Bullet
   layers:
   - Default
   - TransparentFX

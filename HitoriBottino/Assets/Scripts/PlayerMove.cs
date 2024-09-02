@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening.Plugins.Options;
 using UnityEngine;
 
 public class PlayerMove : MonoBehaviour
@@ -30,6 +31,8 @@ public class PlayerMove : MonoBehaviour
     };
     public playerDirection playerDir;
     Rigidbody2D playerRigidbody2D;
+    Transform playerTransform;
+    Vector3 playerPosition;
     float playerSpeed;
     float playerWalkSpeed = 5.0f;
     float playerJumpSpeed = 10.0f;
@@ -49,21 +52,33 @@ public class PlayerMove : MonoBehaviour
     Vector3 playerVelocityInFloatAreaTemp;
     bool isPuttingFloatArea;
     #endregion
-
+    #region 攻撃判定
+    [SerializeField] GameObject bullet_up;
+    [SerializeField] GameObject bullet_down;
+    [SerializeField] GameObject bullet_left;
+    [SerializeField] GameObject bullet_right;
+    Vector3 directionTemp;
+    bool isAttacking;
+    int bulletCoolTime = 50;
+    int bulletTime = 0;
+    #endregion
     // Start is called before the first frame update
     void Start()
     {
         mainCamera = Camera.main;
         playerRigidbody2D = this.GetComponent<Rigidbody2D>();
         floatAreas = new GameObject[floatAreasLength + 1];
+        playerTransform = this.transform;
     }
 
     // Update is called once per frame
     void Update()
     {
+        GetCursorPosition();
         MovePlayer();
         PutFloatArea();
         InFloatArea();
+        ShootBullet();
         playerRigidbody2D.velocity = playerVelocityTemp;
     }
 
@@ -117,7 +132,42 @@ public class PlayerMove : MonoBehaviour
     }
     #endregion
     #endregion
-
+    #region 弾発射
+    void ShootBullet()
+    {
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            isAttacking = !isAttacking;
+        }
+        if(isAttacking)
+        {
+            if(bulletTime > bulletCoolTime)
+            {
+                Instantiate(BulletDirection(), playerTransform.position, Quaternion.identity);
+                bulletTime = 0;
+            } else {
+                bulletTime ++;
+            }
+        }
+    }
+    GameObject BulletDirection()
+    {
+        cursorPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+        playerPosition = playerTransform.position;
+        directionTemp = cursorPosition - playerPosition;
+        switch((directionTemp.x > directionTemp.y, -directionTemp.x > directionTemp.y))
+        {
+            case(true,true):
+                return bullet_down;
+            case(true,false):
+                return bullet_right;
+            case(false,true):
+                return bullet_left;
+            case(false,false):
+                return bullet_up;
+        }
+    }
+    #endregion
     #region 無重力空間設置
 
     void PutFloatArea()
@@ -135,8 +185,7 @@ public class PlayerMove : MonoBehaviour
             }
             if (isPuttingFloatArea)
             {
-                cursorPosition = CuttingCursorPosition(mainCamera.ScreenToWorldPoint(Input.mousePosition));
-                newFloatAreaTransform.position = cursorPosition;
+                newFloatAreaTransform.position = CuttingCursorPosition(cursorPosition);
             }
             if (Input.GetMouseButtonUp(1))
             {
@@ -204,6 +253,10 @@ public class PlayerMove : MonoBehaviour
     {
         previousPlayerState = currentPlayerState;
         currentPlayerState = newPlayerState;
+    }
+    void GetCursorPosition()
+    {
+        cursorPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
     }
 
     private void OnCollisionEnter2D(Collision2D other)

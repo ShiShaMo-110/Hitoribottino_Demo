@@ -10,6 +10,7 @@ public class EnemyMove : MonoBehaviour
     [SerializeField] FloatAreaCheck floatAreaCheck;
     int temp = 0;
     int direction = 1;
+    public int HP = 10;
     // Start is called before the first frame update
     void Start()
     {
@@ -21,6 +22,7 @@ public class EnemyMove : MonoBehaviour
     {
         EnemyJump();
         InFloatArea();
+        EnemyDeath();
     }
     void EnemyJump()
     {
@@ -49,6 +51,13 @@ public class EnemyMove : MonoBehaviour
         if(floatAreaCheck.getisExit())
         {
             enemyRigidbody2D.velocity = enemyVelocityInFloatAreaTemp;
+        }
+    }
+    void EnemyDeath()
+    {
+        if(HP <= 0)
+        {
+            Destroy(this.gameObject);
         }
     }
 }
